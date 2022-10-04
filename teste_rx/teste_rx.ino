@@ -1,40 +1,93 @@
+// Transmissor de RF
+// Link: (https://blogmasterwalkershop.com.br/arduino/como-usar-com-arduino-transmissor-e-receptor-rf-315mhz-433mhz)
+#include <RH_ASK.h> 
+#include <SPI.h>
 
-#include <RH_ASK.h> //INCLUSÃO DE BIBLIOTECA
-#include <SPI.h> //INCLUSÃO DE BIBLIOTECA
- 
-RH_ASK driver; //CRIA O DRIVER PARA COMUNICAÇÃO
- 
-const int pinoLed = 13; //PINO DIGITAL UTILIZADO PELO LED
-String str = ""; //VARIÁVEL DO TIPO STRING
-int statusLed = 0; //VARIÁVEL DO TIPO INT (CONTROLA O ESTADO ATUAL DO LED)
- 
+// -------- MACROS --------
+
+#define USB_BAUD_RATE         9600
+
+// -------- VARIÁVEIS GLOBAIS --------
+
+// Objeto para abstrair driver do radio-receptor
+RH_ASK rxDriver;
+
+// Pinos
+const int rxDigital = 11; // SPI SIMO (Slave-Input-Master-Output)
+
+float qualidadePista = -1.0; // Valor inicial simbólico
+unsigned contador = 0;
+
+// -------- FUNÇÕES AUXILIARES --------
+
+int recebeDado(float* qualidadeRecebida, RH_ASK& rxDriverLocal) {
+  
+  // cria buffer para guardar dado recebido
+  uint8_t buffer[RH_ASK_MAX_MESSAGE_LEN];
+  uint8_t comprimentoBuffer = sizeof(buffer);  
+  memset(buffer, 0, comprimentoBuffer);
+  
+  // Aguarda mensagem e preenche o buffer
+  if(rxDriverLocal.recv(buffer, &comprimentoBuffer))  {
+    
+    // Formato da mensagem
+    // const char idCarro[8+1] = "ffffffff";
+    // sprintf(buffer, "%s:%.2f", idCarro, qualidadePista);
+    // ffffffff:2.00
+    
+    // Filtra a mesnagem para garantir que está no formato certo
+    bool mensagemValida = buffer[8] == ':';
+    if(mensagemValida == false)
+      return -1;
+
+    // Separa partes da mensagem (tamanho não inclui \n)
+    size_t tamanho = strlen((char*)buffer);
+    char qualidadePistaTexto[ (tamanho-9) + 1];
+    memcpy(qualidadePistaTexto, buffer+9, tamanho-9);
+    qualidadePistaTexto[tamanho-9] = '\0';
+
+    // Converte texto com a qualidade da pista para variável numérica
+    // Problema: não vai ser possível tratar erro se não for um número
+    String qualidadePistaString(qualidadePistaTexto);           
+    *qualidadeRecebida = qualidadePistaString.toFloat();
+    return 0;
+  }
+
+  return 1;
+}
+
+// -------- SETUP --------
+
 void setup(){
-    driver.init(); //INICIALIZA A COMUNICAÇÃO RF DO DRIVER
-    pinMode(pinoLed, OUTPUT); //DEFINE O PINO COMO SAÍDA
-    digitalWrite(pinoLed, LOW); //LED INICIA DESLIGADO
-    Serial.begin(9600);
-}
-void loop(){
-    uint8_t buf[RH_ASK_MAX_MESSAGE_LEN]; //LÊ A MENSAGEM RECEBIDA (PALAVRA: led)
-    uint8_t buflen = sizeof(buf); //CRIA O COMPRIMENTO DO BUFFER PARA O TAMANHO DE buf
- 
-    if(driver.recv(buf, &buflen)){ //SE O DRIVER RECEBEU buf(INTEIRO) E buflen (COMPRIMENTO DE DADOS), FAZ     
-     str = ""; //VARIÁVEL RECEBE VAZIO
-     int i; //VARIÁVEL LOCAL DO TIPO INTEIRO
-       
-     for(int i = 0; i < buflen; i++){ //PARA i IGUAL A 0, ENQUANTO i MENOR QUE buflen, INCREMENTA i
-      str += (char)buf[i]; //VARIÁVEL RECEBE OS CARACTERES E FORMA A PALAVRA
-     }
-    Serial.println(str);
 
-     if((str.equals("led")) && (statusLed == 0)){ //SE str FOR IGUAL A "led" E statusLed FOR IGUAL A 0, FAZ
-      statusLed = 1; //VARIÁVEL RECEBE 1
-        digitalWrite(pinoLed, HIGH); //ACENDE O LED
-     }else{ //SENÃO, FAZ
-      if((str.equals("led")) && (statusLed == 1)){ //SE str FOR IGUAL A "led" E statusLed FOR IGUAL A 1, FAZ
-          statusLed = 0; //VARIÁVEL RECEBE 0
-            digitalWrite(pinoLed, LOW); //APAGA O LED
-      }
-     }
-    }
+  // Inicializa monitor serial USB
+  Serial.begin(USB_BAUD_RATE);
+  
+  // Inicializa driver do Rx RF (objeto global)
+  rxDriver.init();
 }
+
+// -------- LOOP --------
+
+void loop(){
+  
+  float qualidadeRecebida = -1.0;
+  int erro = 0;  
+  
+  // Protótipo: int, [float*, RH_ASK&]
+  erro = recebeDado(&qualidadeRecebida, rxDriver);
+  
+  Serial.print(contador);
+  Serial.print(": ");
+  if(erro == 1)
+    Serial.println("Mensagem nao recebida");
+  if(erro == -1)
+    Serial.println("Mensagem invalida");
+  if(erro == 0)
+    Serial.println(qualidadeRecebida);
+  contador++;
+  
+  // Velocidade limite
+  delay(5);
+}
+

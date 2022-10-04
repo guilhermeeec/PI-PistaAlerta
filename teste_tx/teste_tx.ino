@@ -1,24 +1,50 @@
+// Transmissor de RF
+// Link: (https://blogmasterwalkershop.com.br/arduino/como-usar-com-arduino-transmissor-e-receptor-rf-315mhz-433mhz)
+
 #include <RH_ASK.h>
 #include <SPI.h> //INCLUSÃO DE BIBLIOTECA
 
-RH_ASK driver; //CRIA O DRIVER PARA COMUNICAÇÃO
+RH_ASK txDriver; //CRIA O DRIVER PARA COMUNICAÇÃO
 
-const int pinoBotao = 3; //PINO DIGITAL UTILIZADO PELO PUSH BUTTON
+// -------- MACROS --------
+
+#define JANELA_COLETA_MS      200 // mili-segundos coletando antes de calcular
+#define TAMANHO_MAX_BUFFER    16
+#define USB_BAUD_RATE         9600
+
+// -------- VARIÁVEIS GLOBAIS --------
+
+const char idCarro[8+1] = "ffffffff";
+
+// -------- FUNÇÕES AUXILIARES --------
+
+void enivaDado(float qualidadePista, const char* idCarro, RH_ASK& txDriverLocal) {
+  
+  // Carrega buffer e envia seu conteúdo (uint8_t -> byte padrão)
+  char buffer[TAMANHO_MAX_BUFFER];
+  char qualidadePistaString[5];
+  dtostrf((double) qualidadePista, 4, 2, qualidadePistaString);
+  sprintf(buffer, "%s:%s", idCarro, qualidadePistaString);
+
+  txDriverLocal.send((uint8_t*)buffer, strlen(buffer));
+  txDriverLocal.waitPacketSent();    
+}
+
+// -------- SETUP --------
 
 void setup(){
-    driver.init(); //INICIALIZA A COMUNICAÇÃO RF DO DRIVER
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(pinoBotao, INPUT); //DEFINE O PINO COMO ENTRADA / "_PULLUP" É PARA ATIVAR O RESISTOR INTERNO
-    //DO ARDUINO PARA GARANTIR QUE NÃO EXISTA FLUTUAÇÃO ENTRE 0 (LOW) E 1 (HIGH)
+  // Inicializa driver do Tx RF (objeto global)
+  txDriver.init();
+  Serial.begin(9600);
 }
-void loop(){
-    const char *msg = "led"; //VARIÁVEL RECEBE O VALOR (led)
 
-    if(digitalRead(pinoBotao) == LOW){ //SE A LEITURA DO PINO FOR IGUAL A LOW, FAZ
-        digitalWrite(LED_BUILTIN, HIGH);
-        driver.send((uint8_t *)msg, strlen(msg)); //ENVIA AS INFORMAÇÕES PARA O RECEPTOR (PALAVRA: led)
-        driver.waitPacketSent(); //AGUARDA O ENVIO DAS INFORMAÇÕES
-        delay(200); //INTERVALO DE 200 MILISSEGUNDOS
-    }
-    digitalWrite(LED_BUILTIN, LOW);
+// -------- LOOP --------
+
+void loop(){
+    
+  // Simula tempo de coleta
+  delay(JANELA_COLETA_MS);
+
+  // Protótipo: [float, const char*, RH_ASK&]
+  enivaDado(2.00, idCarro, txDriver);
 }

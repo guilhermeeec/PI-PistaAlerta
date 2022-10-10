@@ -77,6 +77,7 @@ void loop(){
   // Protótipo: int, [float*, RH_ASK&]
   erro = recebeDado(&qualidadeRecebida, rxDriver);
   
+  /*
   Serial.print(contador);
   Serial.print(": ");
   if(erro == 1)
@@ -86,6 +87,14 @@ void loop(){
   if(erro == 0)
     Serial.println(qualidadeRecebida);
   contador++;
+  */
+  
+  if(erro == 0) {
+    Serial.print(contador);
+    Serial.print(": ");
+    Serial.println(qualidadeRecebida);
+    contador++;
+  }
   
   // Velocidade limite
   delay(5);

@@ -16,6 +16,11 @@ RH_ASK txDriver; //CRIA O DRIVER PARA COMUNICAÇÃO
 
 const char idCarro[8+1] = "ffffffff";
 
+// Botao de começar/encerrar sistema
+const int pinoBotao = 3;
+bool f = false;
+bool a = false;
+
 // -------- FUNÇÕES AUXILIARES --------
 
 void enivaDado(float qualidadePista, const char* idCarro, RH_ASK& txDriverLocal) {
@@ -30,17 +35,40 @@ void enivaDado(float qualidadePista, const char* idCarro, RH_ASK& txDriverLocal)
   txDriverLocal.waitPacketSent();    
 }
 
+void startPause() {
+
+  /* Máquina de Estados Finita com 4 estados e 1 entrada
+   * A -> botão está apertado
+   * E -> entrada nova do botão
+   * F -> Funcionando
+   */     
+  do {
+    bool e = (digitalRead(pinoBotao) == LOW);
+    bool a_novo = e;
+    bool f_novo = (!e && f) || (e && (a == f));  
+    a = a_novo;
+    f = f_novo;
+    digitalWrite(LED_BUILTIN, f_novo ? HIGH : LOW);
+  }
+  while (f == false);  
+}
+
 // -------- SETUP --------
 
 void setup(){
   // Inicializa driver do Tx RF (objeto global)
   txDriver.init();
   Serial.begin(9600);
+  pinMode(pinoBotao, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 // -------- LOOP --------
 
 void loop(){
+
+  // Aperta botão para começar/encerrar sistema 
+  startPause();
     
   // Simula tempo de coleta
   delay(JANELA_COLETA_MS);

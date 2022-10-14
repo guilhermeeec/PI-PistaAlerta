@@ -24,10 +24,10 @@ void inicializaAcelerometro() {
   
 }
 
-float coletaDadosAcelerometro (float matrizDados[][6]) {
+float coletaDadosAcelerometro (float matrizDados[QUANTIDADE_AMOSTRAS][6]) {
   // TALVEZ USAR "double"
   float qualidadeTotal = 0.0;
-  for (int i = 0; i < sizeof(matrizDados[0])/sizeof(float); i++) {
+  for (int i = 0; i < sizeof(matrizDados); i++) {
     // Avaliar a qualidade de uma mostra (az^2 + gx^2 + gy^2 + gz^2)
     // TALVEZ USAR "double"
     float qualidadeAmostra = (float) ( pow(matrizDados[i][2], 2) + pow(matrizDados[i][3], 2) + pow(matrizDados[i][4], 2) + pow(matrizDados[i][5], 2) ); 

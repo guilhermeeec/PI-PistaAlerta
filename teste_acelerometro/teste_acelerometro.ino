@@ -38,12 +38,12 @@ void loop(){
   GyZ=Wire.read()<<8|Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 
   //Agora escreve os valores no monitor serial
-  Serial.print("AcX:"); Serial.print(AcX-13220); 
+  Serial.print("AcX:"); Serial.print(AcX-16750); 
   //Serial.print(","); Serial.print("AcY:"); Serial.print(AcY);
   //Serial.print(","); Serial.print("AcZ:"); Serial.println(AcZ);
   //Serial.print(","); Serial.print("Tmp:"); Serial.print(Tmp/340.00+36.53); //Equação da temperatura em Cº de acordo com o datasheet
   //Serial.print(","); Serial.print("GyX:"); Serial.print(GyX);
-  Serial.print(","); Serial.print("GyY:"); Serial.print(GyY+220);
-  Serial.print(","); Serial.print("GyZ:"); Serial.println(GyZ+220);  
+  Serial.print(","); Serial.print("GyY:"); Serial.print(GyY+50);
+  Serial.print(","); Serial.print("GyZ:"); Serial.println(GyZ+50);  
   delay(5);
 }

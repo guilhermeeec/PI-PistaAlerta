@@ -90,8 +90,6 @@ void loop(){
   */
   
   if(erro == 0) {
-    Serial.print(contador);
-    Serial.print(": ");
     Serial.println(qualidadeRecebida);
     contador++;
   }

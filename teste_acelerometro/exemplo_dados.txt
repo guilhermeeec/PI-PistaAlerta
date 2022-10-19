@@ -1,0 +1,6 @@
+AcX:1,GyY:5,GyZ:1
+AcX:2,GyY:5,GyZ:-1
+AcX:3,GyY:5,GyZ:2
+AcX:-3,GyY:5,GyZ:-1
+AcX:-2,GyY:5,GyZ:1
+AcX:-1,GyY:5,GyZ:-2

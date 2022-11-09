@@ -6,6 +6,8 @@
 // -------- MACROS --------
 
 #define USB_BAUD_RATE         9600
+#define JANELA_MEDIA          4
+#define JANELA_PICO           5
 
 // -------- VARIÁVEIS GLOBAIS --------
 
@@ -17,6 +19,13 @@ const int rxDigital = 11; // SPI SIMO (Slave-Input-Master-Output)
 
 float qualidadePista = -1.0; // Valor inicial simbólico
 unsigned contador = 0;
+unsigned contadorPico = 0;
+unsigned contadorPicoMedia = 0;
+
+float pico = 0;
+float picoMedia = 0;
+
+float qualidades[JANELA_MEDIA];
 
 // -------- FUNÇÕES AUXILIARES --------
 
@@ -53,7 +62,44 @@ int recebeDado(float* qualidadeRecebida, RH_ASK& rxDriverLocal) {
     return 0;
   }
 
+  // Se não recebeu nada
   return 1;
+}
+
+float calculaMediaMovel(float* qualidades) {
+  float soma = 0;
+  for(unsigned i = 0; i < JANELA_MEDIA; i++)
+    soma += qualidades[i];
+  return soma/JANELA_MEDIA;        
+}
+
+void calculaPico(float qualidade) {
+  if(qualidade > pico) {
+    pico = qualidade;
+    contadorPico = 0;
+  }
+  else
+    contadorPico++;
+  
+  if(contadorPico == JANELA_PICO) {
+    pico = 0;
+    contadorPico = 0;
+  } 
+}
+
+
+void calculaHibrido(float media) {
+  if(media > picoMedia) {
+    picoMedia = media;
+    contadorPicoMedia = 0;
+  }
+  else
+    contadorPicoMedia++;
+  
+  if(contadorPicoMedia == JANELA_PICO) {
+    picoMedia = 0;
+    contadorPicoMedia = 0;
+  }
 }
 
 // -------- SETUP --------
@@ -65,6 +111,8 @@ void setup(){
   
   // Inicializa driver do Rx RF (objeto global)
   rxDriver.init();
+
+  memset(qualidades,0,JANELA_MEDIA);
 }
 
 // -------- LOOP --------
@@ -76,6 +124,7 @@ void loop(){
   
   // Protótipo: int, [float*, RH_ASK&]
   erro = recebeDado(&qualidadeRecebida, rxDriver);
+  //Serial.println(erro);
   
   /*
   Serial.print(contador);
@@ -90,9 +139,37 @@ void loop(){
   */
   
   if(erro == 0) {
-    Serial.println(qualidadeRecebida);
+    qualidades[contador] = qualidadeRecebida;
+
+    // Calcular média móvel
+    float media = calculaMediaMovel(qualidades);
+
+    // Pega valor de pico e segura por um tempo
+    calculaPico(qualidadeRecebida);   
+    
+    // Pega valor de pico da média móvel e segura por um tempo
+    calculaHibrido(media);    
+        
+    Serial.print("Qualidade: ");
+    Serial.print(qualidadeRecebida);
+    Serial.print(",");
+    Serial.print("Media: ");
+    Serial.print(media);
+    Serial.print(",");
+    Serial.print("Pico: ");
+    Serial.print(pico);
+    Serial.print(",");
+    Serial.print("Hibrido: ");
+    Serial.println(picoMedia);
     contador++;
   }
+
+  // Com Janela = 7
+  // media < 50 -> Boa
+  // 50 < media < 1200 -> Média
+  // media > 1200 -> ruim
+
+  if(contador == JANELA_MEDIA) contador = 0;
   
   // Velocidade limite
   delay(5);

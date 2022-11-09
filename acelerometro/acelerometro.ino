@@ -48,14 +48,14 @@ void coletaDadosAcelerometro(int16_t matrizDados[QUANTIDADE_AMOSTRAS][6]) {
     matrizDados[i][2] = AcZ;
     matrizDados[i][3] = GyX;
     matrizDados[i][4] = GyY+offsetGyy;
-    matrizDados[i][5] = GyZ+offsetGyz;       
+    matrizDados[i][5] = GyZ+offsetGyz;   
     delay(1000/TAXA_COLETA_POR_SEG);
   }
   
 }
 
-float calcularQualidadePista (int16_t matrizDados[QUANTIDADE_AMOSTRAS][6]) {
-  float qualidadeTotal = 0.0;
+double calcularQualidadePista (int16_t matrizDados[QUANTIDADE_AMOSTRAS][6]) {
+  double qualidadeTotal = 0.0;
   int16_t acx,gyy,gyz;
   for (int i = 0; i < QUANTIDADE_AMOSTRAS; i++) {
     if(matrizDados[i][0]<=150)
@@ -73,7 +73,7 @@ float calcularQualidadePista (int16_t matrizDados[QUANTIDADE_AMOSTRAS][6]) {
     else if(matrizDados[i][5]>-60)
       gyz = (matrizDados[i][5]<60 ? 0 : matrizDados[i][5]-60);
       
-    float qualidadeAmostra = (float) ( pow(acx, 2) + pow(gyy, 2) + pow(gyz, 2) ); 
+    double qualidadeAmostra = ( pow(acx, 2) + pow(gyy, 2) + pow(gyz, 2) ); 
     qualidadeTotal += qualidadeAmostra;
   }
 
@@ -98,7 +98,7 @@ void loop() {
   // Quantidade de amostras = (200/1000)s * 100dados/s = 20 dados
   int16_t matrizDados[QUANTIDADE_AMOSTRAS][6];
   coletaDadosAcelerometro(matrizDados);
-  float qualidade = calcularQualidadePista (matrizDados);
+  double qualidade = calcularQualidadePista (matrizDados);
   Serial.println(qualidade);
 
 }

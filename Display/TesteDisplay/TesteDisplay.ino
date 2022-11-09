@@ -14,7 +14,7 @@
 #define NULL  -1
 
 //Define os pinos que serão utilizados para ligação ao display
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(12, 10, 5, 4, 3, 2);
 
 void displayBom(){
   //Limpa a tela
@@ -65,7 +65,6 @@ void displayInit(){
   lcd.setCursor(0, 1);
   lcd.print("################");
 }
-
 
 void idQualidade(int qualidadePista){
   switch (qualidadePista){
